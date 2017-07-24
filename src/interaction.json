@@ -1,0 +1,53 @@
+{
+  "intents": [
+    {
+      "name": "AMAZON.CancelIntent",
+      "samples": []
+    },
+    {
+      "name": "AMAZON.HelpIntent",
+      "samples": []
+    },
+    {
+      "name": "AMAZON.StartOverIntent",
+      "samples": []
+    },
+    {
+      "name": "AMAZON.StopIntent",
+      "samples": []
+    },
+    {
+      "name": "AnswerIntent",
+      "samples": [
+        "{artist}",
+        "{song}"
+      ],
+      "slots": [
+        {
+          "name": "artist",
+          "type": "AMAZON.Musician",
+          "samples": []
+        },
+        {
+          "name": "song",
+          "type": "AMAZON.MusicRecording",
+          "samples": []
+        }
+      ]
+    },
+    {
+      "name": "QuizIntent",
+      "samples": [
+        "start a quiz",
+        "start a quiz game",
+        "and start a quiz",
+        "and quiz me",
+        "for a quiz",
+        "a quiz",
+        "yes",
+        "quiz"
+      ],
+      "slots": []
+    }
+  ]
+}
