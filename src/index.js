@@ -1,5 +1,6 @@
 'use strict';
 const Alexa = require('alexa-sdk');
+const musixmatchkey = '8b7654870c8395335a30eb19039218f6';
 
 //=========================================================================================================================================
 //TODO: The items below this comment need your attention
@@ -27,9 +28,12 @@ function getQuestion(counter, property, item)
     {
         case "Song":
             return "Here is your " + counter + "th question.  What is the song title of " + item.Lyric + "?";
-        break;
+
+            //return "Here is your " + counter + "th question.  What is the song title of " + item.Lyric + "?" + data2[2].artist;
+        //break;
         default:
-            return "Here is your " + counter + "th question.  What is the " + formatCasing(property) + " of "  + item.Lyric + "?";
+            return "Here is your " + counter + "th question.  What is the " + formatCasing(property) + " of " + item.Lyric + "?";
+            //return "Here is your " + counter + "th question.  What is the " + formatCasing(property) + " of " + item.Lyric + "?" + data2[2].artist;
     }
 }
 
@@ -41,13 +45,68 @@ function getAnswer(property, item)
     switch(property)
     {
         case "Song":
-            return "The song title of " + item.Lyric + " is " + item[property] + ". "
-        break;
+            return "The song title of " + item.Lyric + " is " + item[property] + ". ";
+        //break;
         default:
-            return "The " + formatCasing(property) + " of " + item.Lyric + " is " + item[property] + ". "
-        break;
+            return "The " + formatCasing(property) + " of " + item.Lyric + " is " + item[property] + ". ";
+        //break;
     }
 }
+function Song(artist,title,mmid,mmidartist) {
+    this.artist = artist;
+    this.title = title;
+    this.mmid = mmid;
+    this.mmidartist = mmidartist;
+    this.lyric = selectLine(getLyrics(mmid));
+}
+//pagenum can default 1
+//takes in the pagenum
+//returns an array of 25 Songs
+function getSongs(pageNum) {
+    var result = [];
+    var songs = []
+    //get list of songs in json
+    var https = require('https');
+    var response = {
+        host: '//api.musixmatch.com',
+        port: 443,
+        path: '/ws/1.1/chart.tracks.get?page=' + encodeURIComponent(pageNum) + '&page_size=25&country=us&f_has_lyrics=1&apikey=' + musixmatchAPIkey,
+        method: 'GET' }
+    //parse list of songs from json to array
+    var jsonCount = Object.keys(response.message.body.track_list).length;
+    for (var i = 0; i < jsonCount; i++) {
+        songs.push(new Song(response.message.body.track_list[i].track.artist_name,response.message.body.track_list[i].track.track_name,response.message.body.track_list[i].track.commontrack_id,response.message.body.track_list[i].track.artist_id));
+    }
+    return result
+}
+
+function getLyrics(mmid) {
+    var result = [];
+    //get lyrics in json
+    var https = require('https');
+    var response = {
+        host: '//api.musixmatch.com',
+        port: 443,
+        path: '/ws/1.1/track.lyrics.get?commontrack_id=' + encodeURIComponent(mmid) + '&apikey=' + musixmatchAPIkey,
+        method: 'GET'
+    }
+    //get lyrics_body from json
+    var lyricsBody = response.message.body.lyrics.lyrics_body;
+    //var lyricsBody = Object.keys(response.message.body.lyrics.lyrics_body);
+    
+    //parse lyrics and clean up
+    lyrics = lyricsBody.split('\n');
+    lyrics = lyrics.filter(function(entry) { return entry.trim() != ''; });
+    lyrics = lyrics.filter(function (entry) {return !entry.startsWith("**")});
+
+    return lyrics;
+}
+function selectLine(lyrics) {
+    var lineNum = Math.random(0, lyrics.length - 1);
+    return lyrics[lineNum] + '\n' + lyrics[lineNum + 1];
+}
+
+
 
 //This is a list of positive speechcons that this skill will use when a user gets a correct answer.  For a full list of supported
 //speechcons, go here: https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/speechcon-reference
@@ -108,18 +167,19 @@ function getLargeImage(item) { return "https://m.media-amazon.com/images/G/01/mo
 //TODO: Replace this data with your own.
 //=========================================================================================================================================
 var data = [
-                {Lyric: "You've got to hold on to what we've got",  Artist: "Bon Jovi",    Song:"Living on a Prayer"},
-                {Lyric: "You were made to go out and get her",  Artist: "The Beatles",    Song:"Hey Jude"},
-                {Lyric: "I took my baby on a Saturday bang",  Artist: "Michael Jackson",    Song:"Black or White"},
-                {Lyric: "Look inside you and be strong",  Artist: "Mariah Carey",    Song:"Hero"},
-                {Lyric: "Let me see what spring is like",  Artist: "Frank Sinatra",    Song:"Fly me to the moon"},
-                {Lyric: "You've got to make a big impression",  Artist: "Christina Aguilera",    Song:"Genie in a Bottle"},
-                {Lyric: "You think you've got the right but I think you've got it wrong",  Artist: "Toni Basil",    Song:"Mickey"},
-                {Lyric: "But above all this I wish you love",  Artist: "Whitney Houston",    Song:"I will always love you"},
-                {Lyric: "There's a fire starting in my heart",  Artist: "Adele",    Song:"Rolling in the Deep"},
-                {Lyric: "I played with your heart, got lost in the game",  Artist: "Britney Spears",    Song:"Oops I did it again"}
+                { Lyric: "You've got to hold on to what we've got", Artist: "Bon Jovi", Song: "Living on a Prayer" },
+                { Lyric: "You were made to go out and get her", Artist: "The Beatles", Song: "Hey Jude" },
+                { Lyric: "I took my baby on a Saturday bang", Artist: "Michael Jackson", Song: "Black or White" },
+                { Lyric: "Look inside you and be strong", Artist: "Mariah Carey", Song: "Hero" },
+                { Lyric: "Let me see what spring is like", Artist: "Frank Sinatra", Song: "Fly me to the moon" },
+                { Lyric: "You've got to make a big impression", Artist: "Christina Aguilera", Song: "Genie in a Bottle" },
+                { Lyric: "You think you've got the right but I think you've got it wrong", Artist: "Toni Basil", Song: "Mickey" },
+                { Lyric: "But above all this I wish you love", Artist: "Whitney Houston", Song: "I will always love you" },
+                { Lyric: "There's a fire starting in my heart", Artist: "Adele", Song: "Rolling in the Deep" },
+                { Lyric: "I played with your heart, got lost in the game", Artist: "Britney Spears", Song: "Oops I did it again" }
 
-    ]
+];
+var data2 = [new Song('someone','title',123455,1224353),new Song('someone','title',123455,1224353),new Song('someone','title',123455,1224353)];
 
 //=========================================================================================================================================
 //Editing anything below this line might break your skill.
@@ -205,6 +265,7 @@ var quizHandlers = Alexa.CreateStateHandler(states.QUIZ,{
         this.attributes["counter"] = 0;
         this.attributes["quizscore"] = 0;
         this.emitWithState("AskQuestion");
+        //this.data2 = getSongs();
     },
     "AskQuestion": function() {
         if (this.attributes["counter"] == 0)
@@ -214,9 +275,10 @@ var quizHandlers = Alexa.CreateStateHandler(states.QUIZ,{
 
         var random = getRandom(0, data.length-1);
         var item = data[random];
-
+        //var property = 1;
+        //old data
         var propertyArray = Object.getOwnPropertyNames(item);
-        var property = propertyArray[getRandom(1, propertyArray.length-1)];
+        var property = propertyArray[getRandom(1, propertyArray.length - 1)];
 
         this.attributes["quizitem"] = item;
         this.attributes["quizproperty"] = property;
