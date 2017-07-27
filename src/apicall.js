@@ -32,10 +32,14 @@ var handlers = {
 
     'MyIntent': function () {
 
-        var myResult = httpsGet(myRequest);
-        console.log("sent     : " + myRequest);
-        console.log("received : " + myResult);
-        this.emit(':tell', 'The population of ' + myRequest + ' is ' + myResult);
+        httpsGet(myRequest, (myResult) => {
+            console.log("sent     : " + myRequest);
+            console.log("received : " + myResult);
+
+            this.emit(':tell', 'The population of ' + myRequest + ' is ' + myResult);
+
+        }
+        );
 
     }
 };
@@ -49,7 +53,7 @@ var https = require('https');
 // https is a default part of Node.JS.  Read the developer doc:  https://nodejs.org/api/https.html
 // try other APIs such as the current bitcoin price : https://btc-e.com/api/2/btc_usd/ticker  returns ticker.last
 
-function httpsGet2(myData, callback) {
+function httpsGet(myData, callback) {
 
     // GET is a web service request that is fully defined by a URL string
     // Try GET in your browser:
@@ -87,73 +91,6 @@ function httpsGet2(myData, callback) {
             callback(pop);  // this will execute whatever function the caller defined, with one argument
 
         });
-
-    });
-    req.end();
-
-}
-function httpsGet3(myData) {
-
-    // GET is a web service request that is fully defined by a URL string
-    // Try GET in your browser:
-    // https://cp6gckjt97.execute-api.us-east-1.amazonaws.com/prod/stateresource?usstate=New%20Jersey
-
-
-    // Update these options with the details of the web service you would like to call
-    var options = {
-        host: 'cp6gckjt97.execute-api.us-east-1.amazonaws.com',
-        port: 443,
-        path: '/prod/stateresource?usstate=' + encodeURIComponent(myData),
-        method: 'GET',
-
-        // if x509 certs are required:
-        // key: fs.readFileSync('certs/my-key.pem'),
-        // cert: fs.readFileSync('certs/my-cert.pem')
-    };
-
-    var req = https.request(options, res => {
-        res.setEncoding('utf8');
-        var returnData = "";
-
-        res.on('data', chunk => {
-            returnData = returnData + chunk;
-        });
-
-        return JSON.parse(returnData).population;
-
-    });
-    req.end();
-
-}
-
-function httpsGet(myData) {
-
-    // GET is a web service request that is fully defined by a URL string
-    // Try GET in your browser:
-    // https://cp6gckjt97.execute-api.us-east-1.amazonaws.com/prod/stateresource?usstate=New%20Jersey
-
-
-    // Update these options with the details of the web service you would like to call
-    var options = {
-        host: '//api.musixmatch.com',
-        port: 443,
-        path: '/ws/1.1/chart.tracks.get?page=' + encodeURIComponent(1) + '&page_size=25&country=us&f_has_lyrics=1&apikey=8b7654870c8395335a30eb19039218f6',
-        method: 'GET',
-
-        // if x509 certs are required:
-        // key: fs.readFileSync('certs/my-key.pem'),
-        // cert: fs.readFileSync('certs/my-cert.pem')
-    };
-
-    var req = https.request(options, res => {
-        res.setEncoding('utf8');
-        var returnData = "";
-
-        res.on('data', chunk => {
-            returnData = returnData + chunk;
-        });
-
-        return JSON.parse(returnData).message.header.status_code;
 
     });
     req.end();
