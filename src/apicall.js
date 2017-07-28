@@ -32,12 +32,71 @@ var handlers = {
     },
 
     'MyIntent': function () {
-        //var songs = httpsGet(myRequest, parseSongJson);
-        httpsGet(myRequest, parseSongJson);
+        myRequest = 1;
+        var songs = getSongs(myRequest, parseSongJson);
+        console.log('THIS IS AFTER GET SONGS IS CALLED');
+        console.log(songs);
         //this.emit(':tell', 'The song is ' + songs[0].title + ' by ' + songs[0].artist);
 
     }
 };
+
+
+
+
+//    END of Intent Handlers {} ========================================================================================
+// 3. Helper Function  =================================================================================================
+
+
+///////////////API call methods///////////////
+
+var https = require('https');
+function getSongs(pageNum, callback) {
+    var options = {
+        host: 'api.musixmatch.com',
+        port: 443,
+        path: '/ws/1.1/chart.tracks.get?page=' + encodeURIComponent(pageNum) + '&page_size=25&country=us&f_has_lyrics=1&apikey=' + musixmatchkey,
+        method: 'GET',
+    };
+    var req = https.request(options, res => {
+        res.setEncoding('utf8');
+        var returnData = "";
+
+        res.on('data', chunk => {
+            returnData = returnData + chunk;
+        });
+
+        res.on('end', () => {
+            callback(returnData);
+        });
+    });
+    req.end();
+}
+
+function getLyrics(mmid, callback) {
+    var options = {
+        host: 'api.musixmatch.com',
+        port: 443,
+        path: '/ws/1.1/track.lyrics.get?commontrack_id=' + encodeURIComponent(mmid) + '&apikey=' + musixmatchAPIkey,
+        method: 'GET',
+    };
+    var req = https.request(options, res => {
+        res.setEncoding('utf8');
+        var returnData = "";
+
+        res.on('data', chunk => {
+            returnData = returnData + chunk;
+        });
+
+        res.on('end', () => {
+            callback(returnData);
+        });
+    });
+    req.end();
+}
+
+
+///////////////JSON parser methods///////////////
 function parseSongJson(response) {
     var songs = [];
     var parsedResponse = JSON.parse(response);
@@ -48,65 +107,36 @@ function parseSongJson(response) {
         //this.emit(response.message.body.track_list[i].track.artist_name);
         songs.push(new Song(parsedResponse.message.body.track_list[i].track.artist_name, parsedResponse.message.body.track_list[i].track.track_name, parsedResponse.message.body.track_list[i].track.commontrack_id, parsedResponse.message.body.track_list[i].track.artist_id));
     }
+
     console.log(songs);
     return songs;
 }
+function parseLyricsJson(response) {
+    var lyricsBody = JSON.parse(response).message.body.lyrics.lyrics_body;
+    console.log(lyricsBody);
+    
+    var lyrics = lyricsBody.split('\n');
+    console.log(lyrics);
+    lyrics = lyrics.filter(function(entry) { return entry.trim() != ''; });
+    lyrics = lyrics.filter(function (entry) {return !entry.startsWith("**")});
+    console.log(lyrics);
+    return lyrics;
+}
 
 
+///////////////Helper Functions///////////////
+//could be improved later
+function selectLine(lyrics) {
+    var lineNum = Math.random(0, lyrics.length - 1);
+    return lyrics[lineNum] + '\n' + lyrics[lineNum + 1];
+}
+
+
+///////////////Classes///////////////
 function Song(artist, title, mmid, mmidartist) {
     this.artist = artist;
     this.title = title;
     this.mmid = mmid;
     this.mmidartist = mmidartist;
     //this.lyric = selectLine(getLyrics(mmid));
-}
-
-//    END of Intent Handlers {} ========================================================================================
-// 3. Helper Function  =================================================================================================
-
-
-var https = require('https');
-// https is a default part of Node.JS.  Read the developer doc:  https://nodejs.org/api/https.html
-// try other APIs such as the current bitcoin price : https://btc-e.com/api/2/btc_usd/ticker  returns ticker.last
-
-function httpsGet(myData, callback) {
-
-    // GET is a web service request that is fully defined by a URL string
-    // Try GET in your browser:
-    // https://cp6gckjt97.execute-api.us-east-1.amazonaws.com/prod/stateresource?usstate=New%20Jersey
-    var pageNum = 1;
-
-    // Update these options with the details of the web service you would like to call
-    var options = {
-        host: 'api.musixmatch.com',
-        port: 443,
-        path: '/ws/1.1/chart.tracks.get?page=' + encodeURIComponent(pageNum) + '&page_size=25&country=us&f_has_lyrics=1&apikey=' + musixmatchkey,
-        method: 'GET',
-
-        // if x509 certs are required:
-        // key: fs.readFileSync('certs/my-key.pem'),
-        // cert: fs.readFileSync('certs/my-cert.pem')
-    };
-
-    var req = https.request(options, res => {
-        res.setEncoding('utf8');
-        var returnData = "";
-
-        res.on('data', chunk => {
-            returnData = returnData + chunk;
-        });
-
-        res.on('end', () => {
-            // we have now received the raw return data in the returnData variable.
-            // We can see it in the log output via:
-            // console.log(JSON.stringify(returnData))
-            // we may need to parse through it to extract the needed data
-
-            callback(returnData);  // this will execute whatever function the caller defined, with one argument
-
-        });
-
-    });
-    req.end();
-
 }
