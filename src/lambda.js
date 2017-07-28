@@ -67,7 +67,7 @@ function Song(artist, title, mmid, mmidartist) {
 //returns an array of 25 Songs
 function getSongs(pageNum) {
     var result = [];
-    var songs = []
+    var songs = [];
     //get list of songs in json
     //var url = 'https://api.musixmatch.com/ws/1.1/chart.tracks.get?page=' + encodeURIComponent(pageNum) + '&page_size=25&country=us&f_has_lyrics=1&apikey=8b7654870c8395335a30eb19039218f6';
     //response = httpGet(url);
