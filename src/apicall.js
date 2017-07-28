@@ -9,6 +9,7 @@
 //    Modify these strings and messages to change the behavior of your Lambda function
 
 var myRequest = 'Florida';
+const musixmatchkey = '8b7654870c8395335a30eb19039218f6';
 
 // 2. Skill Code =======================================================================================================
 
@@ -32,18 +33,31 @@ var handlers = {
 
     'MyIntent': function () {
 
-        httpsGet(myRequest, (myResult) => {
-            console.log("sent     : " + myRequest);
-            console.log("received : " + myResult);
-
-            this.emit(':tell', 'The population of ' + myRequest + ' is ' + myResult);
-
-        }
-        );
+        httpsGet(myRequest, parseSongJson);
 
     }
 };
+function parseSongJson(response) {
+    console.log('Inside ParseSongJSON');
+    console.log(response);
+    console.log('End Response');
+    return;
+    var jsonCount = Object.keys(response.message.body.track_list).length;
+    for (var i = 0; i < jsonCount; i++) {
+        this.emit(response.message.body.track_list[i].track.artist_name);
+        songs.push(new Song(response.message.body.track_list[i].track.artist_name, response.message.body.track_list[i].track.track_name, response.message.body.track_list[i].track.commontrack_id, response.message.body.track_list[i].track.artist_id));
+    }
+    return result
+}
 
+
+function Song(artist, title, mmid, mmidartist) {
+    this.artist = artist;
+    this.title = title;
+    this.mmid = mmid;
+    this.mmidartist = mmidartist;
+    this.lyric = selectLine(getLyrics(mmid));
+}
 
 //    END of Intent Handlers {} ========================================================================================
 // 3. Helper Function  =================================================================================================
@@ -58,13 +72,13 @@ function httpsGet(myData, callback) {
     // GET is a web service request that is fully defined by a URL string
     // Try GET in your browser:
     // https://cp6gckjt97.execute-api.us-east-1.amazonaws.com/prod/stateresource?usstate=New%20Jersey
-
+    var pageNum = 1;
 
     // Update these options with the details of the web service you would like to call
     var options = {
         host: 'api.musixmatch.com',
         port: 443,
-        path: '/ws/1.1/artist.search?q_artist=justin%20bieber&apikey=8b7654870c8395335a30eb19039218f6',
+        path: '/ws/1.1/chart.tracks.get?page=' + encodeURIComponent(pageNum) + '&page_size=25&country=us&f_has_lyrics=1&apikey=' + musixmatchkey,
         method: 'GET',
 
         // if x509 certs are required:
@@ -86,9 +100,7 @@ function httpsGet(myData, callback) {
             // console.log(JSON.stringify(returnData))
             // we may need to parse through it to extract the needed data
 
-            var pop = JSON.parse(returnData).message.header.status_code;
-
-            callback(pop);  // this will execute whatever function the caller defined, with one argument
+            callback(returnData);  // this will execute whatever function the caller defined, with one argument
 
         });
 
