@@ -34,16 +34,19 @@ var handlers = {
 
     'MyIntent': function () {
         myRequest = 1;
-        var songs = [];
         getSongs(myRequest, (res) => {
             songs = parseSongJson(res);
             console.log('inside of request' + songs);
             console.log('The song is ' + songs[0].title + ' by ' + songs[0].artist);
             this.emit(':tell', 'The song is ' + songs[0].title + ' by ' + songs[0].artist);
         });
-        console.log('outside of request' + songs);
-        console.log('THIS IS AFTER GET SONGS IS CALLED');
-        //this.emit(':tell', 'The song is ' + songs[0].title + ' by ' + songs[0].artist);
+        var myRequest2 = 12459651;
+        getLyrics(myRequest2, (res) => {
+            lyrics = parseLyricsJson(res);
+            console.log('inside of lyrics request' + lyrics);
+            console.log('The first line is ' + lyrics[0]);
+            this.emit(':tell', 'The first line is ' + lyrics[0]);
+        });
 
     }
 };
@@ -84,7 +87,7 @@ function getLyrics(mmid, callback) {
     var options = {
         host: 'api.musixmatch.com',
         port: 443,
-        path: '/ws/1.1/track.lyrics.get?commontrack_id=' + encodeURIComponent(mmid) + '&apikey=' + musixmatchAPIkey,
+        path: '/ws/1.1/track.lyrics.get?commontrack_id=' + encodeURIComponent(mmid) + '&apikey=' + musixmatchkey,
         method: 'GET',
     };
     var req = https.request(options, res => {
@@ -120,10 +123,10 @@ function parseSongJson(response) {
 }
 function parseLyricsJson(response) {
     var lyricsBody = JSON.parse(response).message.body.lyrics.lyrics_body;
-    console.log(lyricsBody);
+    //console.log(lyricsBody);
 
     var lyrics = lyricsBody.split('\n');
-    console.log(lyrics);
+    //console.log(lyrics);
     lyrics = lyrics.filter(function (entry) { return entry.trim() != ''; });
     lyrics = lyrics.filter(function (entry) { return !entry.startsWith("**") });
     console.log(lyrics);
