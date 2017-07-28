@@ -10,6 +10,7 @@
 
 var myRequest = 'Florida';
 const musixmatchkey = '8b7654870c8395335a30eb19039218f6';
+var songs = 'testing';
 
 // 2. Skill Code =======================================================================================================
 
@@ -33,9 +34,15 @@ var handlers = {
 
     'MyIntent': function () {
         myRequest = 1;
-        var songs = getSongs(myRequest, parseSongJson);
+        var songs = [];
+        getSongs(myRequest, (res) => {
+            songs = parseSongJson(res);
+            console.log('inside of request' + songs);
+            console.log('The song is ' + songs[0].title + ' by ' + songs[0].artist);
+            this.emit(':tell', 'The song is ' + songs[0].title + ' by ' + songs[0].artist);
+        });
+        console.log('outside of request' + songs);
         console.log('THIS IS AFTER GET SONGS IS CALLED');
-        console.log(songs);
         //this.emit(':tell', 'The song is ' + songs[0].title + ' by ' + songs[0].artist);
 
     }
@@ -100,25 +107,25 @@ function getLyrics(mmid, callback) {
 function parseSongJson(response) {
     var songs = [];
     var parsedResponse = JSON.parse(response);
-    console.log(parsedResponse.message);
+    //console.log(parsedResponse.message);
     var jsonCount = parsedResponse.message.body.track_list.length;
 
     for (var i = 0; i < jsonCount; i++) {
-        //this.emit(response.message.body.track_list[i].track.artist_name);
+        console.log(i);
         songs.push(new Song(parsedResponse.message.body.track_list[i].track.artist_name, parsedResponse.message.body.track_list[i].track.track_name, parsedResponse.message.body.track_list[i].track.commontrack_id, parsedResponse.message.body.track_list[i].track.artist_id));
     }
 
-    console.log(songs);
+    //console.log(songs);
     return songs;
 }
 function parseLyricsJson(response) {
     var lyricsBody = JSON.parse(response).message.body.lyrics.lyrics_body;
     console.log(lyricsBody);
-    
+
     var lyrics = lyricsBody.split('\n');
     console.log(lyrics);
-    lyrics = lyrics.filter(function(entry) { return entry.trim() != ''; });
-    lyrics = lyrics.filter(function (entry) {return !entry.startsWith("**")});
+    lyrics = lyrics.filter(function (entry) { return entry.trim() != ''; });
+    lyrics = lyrics.filter(function (entry) { return !entry.startsWith("**") });
     console.log(lyrics);
     return lyrics;
 }
